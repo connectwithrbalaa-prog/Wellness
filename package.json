@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -33,12 +36,4 @@
     "typescript-eslint": "^8.3.0",
     "vite": "^5.4.2"
   }
-}
-const url = import.meta.env.VITE_SUPABASE_URL;
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!url || !key) {
-  document.body.innerHTML =
-    "<pre>Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in this deployment.</pre>";
-  throw new Error("Missing Supabase env vars");
 }
