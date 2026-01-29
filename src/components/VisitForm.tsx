@@ -275,7 +275,7 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
 
       const { error: analysisError } = await supabase
         .from('rule_based_analysis')
-        .upsert({ ...analysis, visit_id: visitId });
+        .upsert({ ...analysis, visit_id: visitId }, { onConflict: 'visit_id' });
 
       if (analysisError) throw analysisError;
 
@@ -287,7 +287,7 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
           visit_id: visitId,
           genai_explanation: explanation,
           approval_status: 'pending'
-        });
+        }, { onConflict: 'visit_id' });
 
       if (reportError) throw reportError;
 
