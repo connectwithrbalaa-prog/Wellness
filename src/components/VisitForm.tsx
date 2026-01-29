@@ -10,6 +10,17 @@ interface Props {
 }
 
 interface FormData {
+  lsm_kpa: number | null;
+  cap_dbm: number | null;
+  ast_ul: number | null;
+  alt_ul: number | null;
+  platelets: number | null;
+  albumin_gl: number | null;
+  ggt_ul: number | null;
+  hba1c_percent: number | null;
+  bmi_value: number | null;
+  age_years: number | null;
+  has_diabetes: boolean;
   steatosis_grade: 'S0' | 'S1' | 'S2' | 'S3' | 'S4';
   fibrosis_stage: 'F0' | 'F1' | 'F2' | 'F3' | 'F4';
   bmi_category: 'Low' | 'Healthy' | 'High' | 'Obese';
@@ -34,6 +45,17 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
   const [hasExistingData, setHasExistingData] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
+    lsm_kpa: null,
+    cap_dbm: null,
+    ast_ul: null,
+    alt_ul: null,
+    platelets: null,
+    albumin_gl: null,
+    ggt_ul: null,
+    hba1c_percent: null,
+    bmi_value: null,
+    age_years: null,
+    has_diabetes: false,
     steatosis_grade: 'S0',
     fibrosis_stage: 'F0',
     bmi_category: 'Healthy',
@@ -185,7 +207,189 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
         )}
 
         <section>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">FibroScan Results</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Patient Demographics</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Age (years)
+              </label>
+              <input
+                type="number"
+                value={formData.age_years || ''}
+                onChange={(e) => setFormData({ ...formData, age_years: e.target.value ? parseInt(e.target.value) : null })}
+                placeholder="e.g., 45"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                BMI Value
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={formData.bmi_value || ''}
+                onChange={(e) => setFormData({ ...formData, bmi_value: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 26.5"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Normal: 18.5-24.9</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Diabetes Status
+              </label>
+              <select
+                value={formData.has_diabetes ? 'yes' : 'no'}
+                onChange={(e) => setFormData({ ...formData, has_diabetes: e.target.value === 'yes' })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="no">No Diabetes</option>
+                <option value="yes">Has Diabetes</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">FibroScan Measurements</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                LSM - Liver Stiffness (kPa)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={formData.lsm_kpa || ''}
+                onChange={(e) => setFormData({ ...formData, lsm_kpa: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 8.5"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Reference: &lt;7 (F0), 7-9.5 (F1-F2), 9.6-12.5 (F3), &gt;12.5 (F4)
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                CAP - Controlled Attenuation (dB/m)
+              </label>
+              <input
+                type="number"
+                step="1"
+                value={formData.cap_dbm || ''}
+                onChange={(e) => setFormData({ ...formData, cap_dbm: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 285"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Reference: &lt;238 (S0), 238-260 (S1), 260-290 (S2), &gt;290 (S3)
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Blood Test Results</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                AST (U/L)
+              </label>
+              <input
+                type="number"
+                step="1"
+                value={formData.ast_ul || ''}
+                onChange={(e) => setFormData({ ...formData, ast_ul: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 32"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Normal: 10-40 U/L</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                ALT (U/L)
+              </label>
+              <input
+                type="number"
+                step="1"
+                value={formData.alt_ul || ''}
+                onChange={(e) => setFormData({ ...formData, alt_ul: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 28"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Normal: 7-56 U/L</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Platelets (10⁹/L)
+              </label>
+              <input
+                type="number"
+                step="1"
+                value={formData.platelets || ''}
+                onChange={(e) => setFormData({ ...formData, platelets: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 250"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Normal: 150-400 10⁹/L</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Albumin (g/L)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={formData.albumin_gl || ''}
+                onChange={(e) => setFormData({ ...formData, albumin_gl: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 42"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Normal: 35-52 g/L</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                GGT (U/L)
+              </label>
+              <input
+                type="number"
+                step="1"
+                value={formData.ggt_ul || ''}
+                onChange={(e) => setFormData({ ...formData, ggt_ul: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 35"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Normal: 0-51 U/L</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                HbA1c (%)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                value={formData.hba1c_percent || ''}
+                onChange={(e) => setFormData({ ...formData, hba1c_percent: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 5.6"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Normal: &lt;5.7%, Prediabetes: 5.7-6.4%</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">FibroScan Categorical (Optional)</h3>
+          <p className="text-sm text-gray-600 mb-3">These will be auto-calculated from LSM/CAP if provided above</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
