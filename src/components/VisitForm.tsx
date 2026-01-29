@@ -105,9 +105,124 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
     }
   };
 
+  const validateFormData = (): string | null => {
+    if (formData.age_years !== null) {
+      if (formData.age_years < 1 || formData.age_years > 120) {
+        return 'Age must be between 1 and 120 years';
+      }
+    }
+
+    if (formData.bmi_value !== null) {
+      if (formData.bmi_value < 10 || formData.bmi_value > 70) {
+        return 'BMI must be between 10 and 70';
+      }
+
+      if (formData.bmi_value < 18.5 && formData.bmi_category !== 'Low') {
+        return 'BMI value suggests Low category, but category is set to ' + formData.bmi_category;
+      }
+      if (formData.bmi_value >= 18.5 && formData.bmi_value < 25 && formData.bmi_category !== 'Healthy') {
+        return 'BMI value suggests Healthy category, but category is set to ' + formData.bmi_category;
+      }
+      if (formData.bmi_value >= 25 && formData.bmi_value < 30 && formData.bmi_category !== 'High') {
+        return 'BMI value suggests High category, but category is set to ' + formData.bmi_category;
+      }
+      if (formData.bmi_value >= 30 && formData.bmi_category !== 'Obese') {
+        return 'BMI value suggests Obese category, but category is set to ' + formData.bmi_category;
+      }
+    }
+
+    if (formData.lsm_kpa !== null) {
+      if (formData.lsm_kpa < 0 || formData.lsm_kpa > 75) {
+        return 'LSM must be between 0 and 75 kPa';
+      }
+
+      if (formData.lsm_kpa < 7 && formData.fibrosis_stage !== 'F0') {
+        return 'LSM < 7 suggests F0 fibrosis, but stage is set to ' + formData.fibrosis_stage;
+      }
+      if (formData.lsm_kpa >= 7 && formData.lsm_kpa < 9.6 && !['F1', 'F2'].includes(formData.fibrosis_stage)) {
+        return 'LSM 7-9.5 suggests F1-F2 fibrosis, but stage is set to ' + formData.fibrosis_stage;
+      }
+      if (formData.lsm_kpa >= 9.6 && formData.lsm_kpa < 12.6 && formData.fibrosis_stage !== 'F2') {
+        return 'LSM 9.6-12.5 suggests F2 fibrosis, but stage is set to ' + formData.fibrosis_stage;
+      }
+      if (formData.lsm_kpa >= 12.6 && formData.lsm_kpa < 14 && formData.fibrosis_stage !== 'F3') {
+        return 'LSM 12.6-14 suggests F3 fibrosis, but stage is set to ' + formData.fibrosis_stage;
+      }
+      if (formData.lsm_kpa >= 14 && formData.fibrosis_stage !== 'F4') {
+        return 'LSM >= 14 suggests F4 cirrhosis, but stage is set to ' + formData.fibrosis_stage;
+      }
+    }
+
+    if (formData.cap_dbm !== null) {
+      if (formData.cap_dbm < 100 || formData.cap_dbm > 400) {
+        return 'CAP must be between 100 and 400 dB/m';
+      }
+
+      if (formData.cap_dbm < 238 && formData.steatosis_grade !== 'S0') {
+        return 'CAP < 238 suggests S0 steatosis, but grade is set to ' + formData.steatosis_grade;
+      }
+      if (formData.cap_dbm >= 238 && formData.cap_dbm < 260 && formData.steatosis_grade !== 'S1') {
+        return 'CAP 238-260 suggests S1 steatosis, but grade is set to ' + formData.steatosis_grade;
+      }
+      if (formData.cap_dbm >= 260 && formData.cap_dbm < 290 && formData.steatosis_grade !== 'S2') {
+        return 'CAP 260-290 suggests S2 steatosis, but grade is set to ' + formData.steatosis_grade;
+      }
+      if (formData.cap_dbm >= 290 && !['S3', 'S4'].includes(formData.steatosis_grade)) {
+        return 'CAP >= 290 suggests S3+ steatosis, but grade is set to ' + formData.steatosis_grade;
+      }
+    }
+
+    if (formData.ast_ul !== null && (formData.ast_ul < 0 || formData.ast_ul > 1000)) {
+      return 'AST must be between 0 and 1000 U/L';
+    }
+
+    if (formData.alt_ul !== null && (formData.alt_ul < 0 || formData.alt_ul > 1000)) {
+      return 'ALT must be between 0 and 1000 U/L';
+    }
+
+    if (formData.platelets !== null && (formData.platelets < 0 || formData.platelets > 1000)) {
+      return 'Platelets must be between 0 and 1000 10⁹/L';
+    }
+
+    if (formData.albumin_gl !== null && (formData.albumin_gl < 0 || formData.albumin_gl > 60)) {
+      return 'Albumin must be between 0 and 60 g/L';
+    }
+
+    if (formData.ggt_ul !== null && (formData.ggt_ul < 0 || formData.ggt_ul > 1000)) {
+      return 'GGT must be between 0 and 1000 U/L';
+    }
+
+    if (formData.hba1c_percent !== null) {
+      if (formData.hba1c_percent < 3 || formData.hba1c_percent > 15) {
+        return 'HbA1c must be between 3 and 15%';
+      }
+
+      if (formData.hba1c_percent >= 6.5 && !formData.has_diabetes) {
+        return 'HbA1c >= 6.5% indicates diabetes, but diabetes status is set to No';
+      }
+    }
+
+    if (formData.lft_status === 'Abnormal') {
+      if (formData.ast_ul !== null && formData.alt_ul !== null) {
+        if (formData.ast_ul <= 40 && formData.alt_ul <= 56) {
+          return 'LFT status is Abnormal but both AST and ALT are in normal range';
+        }
+      }
+    }
+
+    return null;
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setError('');
+
+    const validationError = validateFormData();
+    if (validationError) {
+      setError(validationError);
+      setSaving(false);
+      return;
+    }
 
     try {
       if (hasExistingData) {
@@ -137,6 +252,13 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
   const handleGenerate = async () => {
     setGenerating(true);
     setError('');
+
+    const validationError = validateFormData();
+    if (validationError) {
+      setError(validationError);
+      setGenerating(false);
+      return;
+    }
 
     try {
       if (!hasExistingData) {
@@ -231,6 +353,8 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
               </label>
               <input
                 type="number"
+                min="1"
+                max="120"
                 value={formData.age_years || ''}
                 onChange={(e) => setFormData({ ...formData, age_years: e.target.value ? parseInt(e.target.value) : null })}
                 placeholder="e.g., 45"
@@ -245,6 +369,8 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
               <input
                 type="number"
                 step="0.1"
+                min="10"
+                max="70"
                 value={formData.bmi_value || ''}
                 onChange={(e) => setFormData({ ...formData, bmi_value: e.target.value ? parseFloat(e.target.value) : null })}
                 placeholder="e.g., 26.5"
@@ -279,6 +405,8 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
               <input
                 type="number"
                 step="0.1"
+                min="0"
+                max="75"
                 value={formData.lsm_kpa || ''}
                 onChange={(e) => setFormData({ ...formData, lsm_kpa: e.target.value ? parseFloat(e.target.value) : null })}
                 placeholder="e.g., 8.5"
@@ -296,6 +424,8 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
               <input
                 type="number"
                 step="1"
+                min="100"
+                max="400"
                 value={formData.cap_dbm || ''}
                 onChange={(e) => setFormData({ ...formData, cap_dbm: e.target.value ? parseFloat(e.target.value) : null })}
                 placeholder="e.g., 285"
@@ -318,6 +448,8 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
               <input
                 type="number"
                 step="1"
+                min="0"
+                max="1000"
                 value={formData.ast_ul || ''}
                 onChange={(e) => setFormData({ ...formData, ast_ul: e.target.value ? parseFloat(e.target.value) : null })}
                 placeholder="e.g., 32"
@@ -333,6 +465,8 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
               <input
                 type="number"
                 step="1"
+                min="0"
+                max="1000"
                 value={formData.alt_ul || ''}
                 onChange={(e) => setFormData({ ...formData, alt_ul: e.target.value ? parseFloat(e.target.value) : null })}
                 placeholder="e.g., 28"
@@ -348,6 +482,8 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
               <input
                 type="number"
                 step="1"
+                min="0"
+                max="1000"
                 value={formData.platelets || ''}
                 onChange={(e) => setFormData({ ...formData, platelets: e.target.value ? parseFloat(e.target.value) : null })}
                 placeholder="e.g., 250"
@@ -363,6 +499,8 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
               <input
                 type="number"
                 step="0.1"
+                min="0"
+                max="60"
                 value={formData.albumin_gl || ''}
                 onChange={(e) => setFormData({ ...formData, albumin_gl: e.target.value ? parseFloat(e.target.value) : null })}
                 placeholder="e.g., 42"
@@ -378,6 +516,8 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
               <input
                 type="number"
                 step="1"
+                min="0"
+                max="1000"
                 value={formData.ggt_ul || ''}
                 onChange={(e) => setFormData({ ...formData, ggt_ul: e.target.value ? parseFloat(e.target.value) : null })}
                 placeholder="e.g., 35"
@@ -393,6 +533,8 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
               <input
                 type="number"
                 step="0.1"
+                min="3"
+                max="15"
                 value={formData.hba1c_percent || ''}
                 onChange={(e) => setFormData({ ...formData, hba1c_percent: e.target.value ? parseFloat(e.target.value) : null })}
                 placeholder="e.g., 5.6"
