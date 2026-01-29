@@ -42,6 +42,7 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [hasExistingData, setHasExistingData] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
@@ -75,6 +76,13 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
   useEffect(() => {
     loadVisitData();
   }, [visitId]);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   const loadVisitData = async () => {
     try {
@@ -118,7 +126,7 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
         setHasExistingData(true);
       }
 
-      alert('Data saved successfully');
+      setSuccessMessage('Data is Saved');
     } catch (err: any) {
       setError(err.message || 'Failed to save data');
     } finally {
@@ -168,8 +176,8 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
 
       if (statusError) throw statusError;
 
-      alert('Analysis generated successfully and sent for approval!');
-      onBack();
+      setSuccessMessage('Analysis generated successfully and sent for approval!');
+      setTimeout(() => onBack(), 2000);
     } catch (err: any) {
       setError(err.message || 'Failed to generate analysis');
     } finally {
@@ -203,6 +211,14 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
             {error}
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+            <div className="bg-white rounded-lg shadow-2xl border-2 border-emerald-500 p-8 min-w-[300px]">
+              <p className="text-center text-xl font-semibold text-gray-900">{successMessage}</p>
+            </div>
           </div>
         )}
 
