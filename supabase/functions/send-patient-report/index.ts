@@ -24,7 +24,13 @@ Deno.serve(async (req: Request) => {
   try {
     const { to, patientName, reportContent, visitDate }: EmailRequest = await req.json();
 
-    const resendApiKey = "re_dp1tyAc8_CWFKjAMY7ACxptysqQLn8txb";
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+
+    if (!resendApiKey) {
+      throw new Error('RESEND_API_KEY environment variable is not set');
+    }
+
+    console.log('Sending email to:', to);
 
     const htmlContent = `
 <!DOCTYPE html>
