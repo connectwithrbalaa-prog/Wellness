@@ -24,23 +24,7 @@ Deno.serve(async (req: Request) => {
   try {
     const { to, patientName, reportContent, visitDate }: EmailRequest = await req.json();
 
-    const resendApiKey = Deno.env.get('RESEND_API_KEY');
-
-    if (!resendApiKey) {
-      return new Response(
-        JSON.stringify({
-          error: 'Email service not configured',
-          message: 'Please configure RESEND_API_KEY to enable email functionality'
-        }),
-        {
-          status: 503,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-    }
+    const resendApiKey = "re_dp1tyAc8_CWFKjAMY7ACxptysqQLn8txb";
 
     const htmlContent = `
 <!DOCTYPE html>
