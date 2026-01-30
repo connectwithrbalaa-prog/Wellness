@@ -295,25 +295,118 @@ export const CalculationDetails: React.FC<CalculationDetailsProps> = ({ measurem
                 </div>
 
                 <div>
-                  <p className="font-medium text-gray-700">Deduction Factors:</p>
-                  <div className="text-xs text-gray-600 mt-2 space-y-1">
-                    <p>• Fat accumulation (Steatosis): -8% per severity level (S0-S3)</p>
-                    <p>• Liver scarring (Fibrosis): -12% per severity level (F0-F4)</p>
-                    <p>• BMI - Obese: -10% | High: -5%</p>
-                    <p>• Visceral fat - Obese: -10% | High: -5%</p>
-                    <p>• Abnormal liver function tests: -8%</p>
-                    <p>• Abnormal lipid profile: -5%</p>
-                    <p>• Ultrasound Grade 3/Fatty liver: -7% | Grade 2: -4%</p>
-                    <p>• Poor sleep quality: -3%</p>
-                    <p>• High stress levels: -4%</p>
-                    <p>• Alcohol use: -10%</p>
-                    <p>• Smoking: -5%</p>
+                  <p className="font-medium text-gray-700">Calculation with Patient Values:</p>
+                  <div className="text-xs bg-white p-3 rounded border border-gray-200 mt-2 space-y-1 font-mono">
+                    {(() => {
+                      const steatosisScore = parseInt(measurements.steatosis_grade?.substring(1) || '0');
+                      const fibrosisScore = parseInt(measurements.fibrosis_stage?.substring(1) || '0');
+                      const cap = measurements.cap_dbm;
+                      const lsm = measurements.lsm_kpa;
+
+                      let capScore = 0;
+                      if (cap) {
+                        if (cap >= 290) capScore = 3;
+                        else if (cap >= 260) capScore = 2;
+                        else if (cap >= 238) capScore = 1;
+                      }
+
+                      let lsmScore = 0;
+                      if (lsm) {
+                        if (lsm >= 12.5) lsmScore = 4;
+                        else if (lsm >= 9.6) lsmScore = 3;
+                        else if (lsm >= 7) lsmScore = 2;
+                        else lsmScore = 0;
+                      }
+
+                      const effectiveSteatosis = Math.max(steatosisScore, capScore);
+                      const effectiveFibrosis = Math.max(fibrosisScore, lsmScore);
+
+                      let runningScore = 100;
+                      const deductions = [];
+
+                      deductions.push(`Starting score: ${runningScore}%`);
+
+                      if (effectiveSteatosis > 0) {
+                        const deduction = effectiveSteatosis * 8;
+                        runningScore -= deduction;
+                        deductions.push(`- Fat accumulation level ${effectiveSteatosis}: -${deduction}% → ${runningScore}%`);
+                      }
+
+                      if (effectiveFibrosis > 0) {
+                        const deduction = effectiveFibrosis * 12;
+                        runningScore -= deduction;
+                        deductions.push(`- Liver scarring level ${effectiveFibrosis}: -${deduction}% → ${runningScore}%`);
+                      }
+
+                      if (measurements.bmi_category === 'Obese') {
+                        runningScore -= 10;
+                        deductions.push(`- BMI category (Obese): -10% → ${runningScore}%`);
+                      } else if (measurements.bmi_category === 'High') {
+                        runningScore -= 5;
+                        deductions.push(`- BMI category (High): -5% → ${runningScore}%`);
+                      }
+
+                      if (measurements.visceral_fat_category === 'Obese') {
+                        runningScore -= 10;
+                        deductions.push(`- Visceral fat (Obese): -10% → ${runningScore}%`);
+                      } else if (measurements.visceral_fat_category === 'High') {
+                        runningScore -= 5;
+                        deductions.push(`- Visceral fat (High): -5% → ${runningScore}%`);
+                      }
+
+                      if (measurements.lft_status === 'Abnormal') {
+                        runningScore -= 8;
+                        deductions.push(`- Abnormal liver function tests: -8% → ${runningScore}%`);
+                      }
+
+                      if (measurements.lipid_profile_status === 'Abnormal') {
+                        runningScore -= 5;
+                        deductions.push(`- Abnormal lipid profile: -5% → ${runningScore}%`);
+                      }
+
+                      if (measurements.usg_abdomen === 'Grade 3' || measurements.usg_abdomen === 'Fatty Liver') {
+                        runningScore -= 7;
+                        deductions.push(`- Ultrasound findings (${measurements.usg_abdomen}): -7% → ${runningScore}%`);
+                      } else if (measurements.usg_abdomen === 'Grade 2') {
+                        runningScore -= 4;
+                        deductions.push(`- Ultrasound findings (Grade 2): -4% → ${runningScore}%`);
+                      }
+
+                      if (measurements.sleep_quality === 'Poor') {
+                        runningScore -= 3;
+                        deductions.push(`- Poor sleep quality: -3% → ${runningScore}%`);
+                      }
+
+                      if (measurements.stress_levels === 'High') {
+                        runningScore -= 4;
+                        deductions.push(`- High stress levels: -4% → ${runningScore}%`);
+                      }
+
+                      if (measurements.substance_usage?.includes('Alcohol') || measurements.substance_usage?.includes('Both')) {
+                        runningScore -= 10;
+                        deductions.push(`- Alcohol use: -10% → ${runningScore}%`);
+                      }
+
+                      if (measurements.substance_usage?.includes('Smoking') || measurements.substance_usage?.includes('Both')) {
+                        runningScore -= 5;
+                        deductions.push(`- Smoking: -5% → ${runningScore}%`);
+                      }
+
+                      const finalScore = Math.max(0, Math.min(100, runningScore));
+                      if (finalScore !== runningScore) {
+                        deductions.push(`Final score (clamped 0-100): ${finalScore}%`);
+                      }
+
+                      return deductions.map((line, idx) => (
+                        <p key={idx} className={idx === 0 ? 'font-semibold' : ''}>{line}</p>
+                      ));
+                    })()}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-3">
                   <div>
-                    <p className="font-medium text-gray-700">Patient Score:</p>
+                    <p className="font-medium text-gray-700">Final Score:</p>
                     <p className="text-2xl font-bold text-emerald-600">
                       {analysis.liver_function_efficiency_percent}%
                     </p>
@@ -333,6 +426,37 @@ export const CalculationDetails: React.FC<CalculationDetailsProps> = ({ measurem
                     <p>• 30-49%: Poor - urgent intervention needed</p>
                     <p>• 0-29%: Critical - immediate medical attention required</p>
                   </div>
+                </div>
+
+                <div>
+                  <p className="font-medium text-gray-700">Deduction Reference Guide:</p>
+                  <div className="text-xs text-gray-600 mt-2 space-y-1">
+                    <p>• Fat accumulation: -8% × severity level (0-4)</p>
+                    <p>• Liver scarring: -12% × severity level (0-4)</p>
+                    <p>• BMI - Obese: -10% | High: -5%</p>
+                    <p>• Visceral fat - Obese: -10% | High: -5%</p>
+                    <p>• Abnormal LFT: -8%</p>
+                    <p>• Abnormal lipids: -5%</p>
+                    <p>• USG Grade 3/Fatty: -7% | Grade 2: -4%</p>
+                    <p>• Poor sleep: -3%</p>
+                    <p>• High stress: -4%</p>
+                    <p>• Alcohol: -10%</p>
+                    <p>• Smoking: -5%</p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="font-medium text-gray-700">Clinical Purpose:</p>
+                  <p className="text-gray-600 text-xs mt-1">
+                    Holistic assessment of liver health incorporating objective medical measurements
+                    (fibrosis, steatosis, lab values) and modifiable lifestyle factors. Heavier
+                    penalties for scarring reflect greater clinical significance than fat accumulation.
+                  </p>
+                </div>
+
+                <div>
+                  <p className="font-medium text-gray-700">Literature Reference:</p>
+                  <p className="text-gray-600 text-xs italic mt-1">Internal composite scoring system</p>
                 </div>
               </div>
             </div>
