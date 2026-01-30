@@ -123,7 +123,7 @@ ${reportContent.replace(/\n/g, '<br>').replace(/# /g, '<h2>').replace(/## /g, '<
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Liver Wellness Portal <noreply@yourdomain.com>',
+        from: 'Liver Wellness Portal <onboarding@resend.dev>',
         to: [to],
         subject: `Your Liver Health Report - ${visitDate}`,
         html: htmlContent,
