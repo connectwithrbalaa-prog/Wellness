@@ -230,6 +230,29 @@ export const ReportViewer: React.FC<Props> = ({ visitId, showActions = false }) 
                 </p>
               </div>
             </div>
+
+            <div className="mt-4 p-4 bg-white bg-opacity-70 rounded-lg border border-emerald-200">
+              <h4 className="text-sm font-semibold text-gray-900 mb-2">How the Efficiency Score is Calculated</h4>
+              <p className="text-xs text-gray-700 mb-2">
+                The Liver Function Efficiency score starts at 100% and is reduced based on various health factors:
+              </p>
+              <ul className="text-xs text-gray-700 space-y-1">
+                <li>• Fat accumulation: -8% per severity level</li>
+                <li>• Liver scarring: -12% per severity level</li>
+                <li>• Obesity/High BMI: -5% to -10%</li>
+                <li>• High visceral fat: -5% to -10%</li>
+                <li>• Abnormal liver enzymes: -8%</li>
+                <li>• Abnormal lipid profile: -5%</li>
+                <li>• Ultrasound findings: -4% to -7%</li>
+                <li>• Poor sleep quality: -3%</li>
+                <li>• High stress: -4%</li>
+                <li>• Alcohol use: -10%</li>
+                <li>• Smoking: -5%</li>
+              </ul>
+              <p className="text-xs text-gray-600 mt-2 italic">
+                The final score reflects overall liver health, with higher percentages indicating better function.
+              </p>
+            </div>
           </div>
         </div>
       </div>
