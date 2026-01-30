@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Activity, AlertCircle, Download, Mail, Loader } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import jsPDF from 'jspdf';
+import { CalculationDetails, ScoreInfoTooltip } from './CalculationDetails';
 
 interface Props {
   visitId: string;
@@ -291,7 +292,19 @@ export const ReportViewer: React.FC<Props> = ({ visitId, showActions = false }) 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {analysis.fib4_score !== null && (
               <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <h5 className="text-xs font-medium text-gray-600 mb-1">FIB-4 Index</h5>
+                <div className="flex items-center">
+                  <h5 className="text-xs font-medium text-gray-600 mb-1">FIB-4 Index</h5>
+                  <ScoreInfoTooltip
+                    content={{
+                      title: 'FIB-4 Index',
+                      formula: 'FIB-4 = (Age × AST) / (Platelets × √ALT)',
+                      calculation: `(${measurements.age_years} × ${measurements.ast_ul}) / (${measurements.platelets} × √${measurements.alt_ul}) = ${analysis.fib4_score}`,
+                      result: analysis.fib4_score,
+                      interpretation: analysis.fib4_risk,
+                      references: '<1.45 = Low risk; 1.45-3.25 = Indeterminate; >3.25 = High risk'
+                    }}
+                  />
+                </div>
                 <p className="text-2xl font-bold text-gray-900">{analysis.fib4_score}</p>
                 <p className={`text-sm font-medium mt-1 ${
                   analysis.fib4_risk === 'Low risk' ? 'text-green-600' :
@@ -308,7 +321,19 @@ export const ReportViewer: React.FC<Props> = ({ visitId, showActions = false }) 
 
             {analysis.nfs_score !== null && (
               <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <h5 className="text-xs font-medium text-gray-600 mb-1">NAFLD Fibrosis Score</h5>
+                <div className="flex items-center">
+                  <h5 className="text-xs font-medium text-gray-600 mb-1">NAFLD Fibrosis Score</h5>
+                  <ScoreInfoTooltip
+                    content={{
+                      title: 'NAFLD Fibrosis Score',
+                      formula: 'NFS = -1.675 + (0.037×Age) + (0.094×BMI) + (1.13×Diabetes) + (0.99×AST/ALT) - (0.013×Platelets) - (0.66×Albumin)',
+                      calculation: `-1.675 + (0.037×${measurements.age_years}) + (0.094×${measurements.bmi_value}) + (1.13×${measurements.has_diabetes ? 1 : 0}) + (0.99×${(measurements.ast_ul / measurements.alt_ul).toFixed(2)}) - (0.013×${measurements.platelets}) - (0.66×${measurements.albumin_gl}) = ${analysis.nfs_score}`,
+                      result: analysis.nfs_score,
+                      interpretation: analysis.nfs_risk,
+                      references: '<-1.455 = Low risk; -1.455 to 0.676 = Indeterminate; >0.676 = High risk'
+                    }}
+                  />
+                </div>
                 <p className="text-2xl font-bold text-gray-900">{analysis.nfs_score}</p>
                 <p className={`text-sm font-medium mt-1 ${
                   analysis.nfs_risk === 'Low risk' ? 'text-green-600' :
@@ -325,7 +350,19 @@ export const ReportViewer: React.FC<Props> = ({ visitId, showActions = false }) 
 
             {analysis.apri_score !== null && (
               <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <h5 className="text-xs font-medium text-gray-600 mb-1">APRI Score</h5>
+                <div className="flex items-center">
+                  <h5 className="text-xs font-medium text-gray-600 mb-1">APRI Score</h5>
+                  <ScoreInfoTooltip
+                    content={{
+                      title: 'APRI Score',
+                      formula: 'APRI = [(AST / ULN) / Platelets] × 100',
+                      calculation: `[(${measurements.ast_ul} / 40) / ${measurements.platelets}] × 100 = ${analysis.apri_score}`,
+                      result: analysis.apri_score,
+                      interpretation: analysis.apri_risk,
+                      references: '<0.5 = Low risk; 0.5-1.5 = Indeterminate; >1.5 = High risk'
+                    }}
+                  />
+                </div>
                 <p className="text-2xl font-bold text-gray-900">{analysis.apri_score}</p>
                 <p className={`text-sm font-medium mt-1 ${
                   analysis.apri_risk === 'Low risk' ? 'text-green-600' :
@@ -342,7 +379,19 @@ export const ReportViewer: React.FC<Props> = ({ visitId, showActions = false }) 
 
             {analysis.fast_score !== null && (
               <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <h5 className="text-xs font-medium text-gray-600 mb-1">FAST Score</h5>
+                <div className="flex items-center">
+                  <h5 className="text-xs font-medium text-gray-600 mb-1">FAST Score</h5>
+                  <ScoreInfoTooltip
+                    content={{
+                      title: 'FAST Score',
+                      formula: 'FAST = e^X / (1 + e^X), where X = -1.65 + 1.07×ln(LSM) + 2.66×10⁻⁸×CAP³ - 63.3/AST',
+                      calculation: `With LSM=${measurements.lsm_kpa} kPa, CAP=${measurements.cap_dbm} dB/m, AST=${measurements.ast_ul} U/L → ${analysis.fast_score}`,
+                      result: analysis.fast_score,
+                      interpretation: analysis.fast_risk,
+                      references: '<0.35 = Rule out; 0.35-0.67 = Indeterminate; ≥0.67 = Rule in NASH with fibrosis'
+                    }}
+                  />
+                </div>
                 <p className="text-2xl font-bold text-gray-900">{analysis.fast_score}</p>
                 <p className={`text-sm font-medium mt-1 ${
                   analysis.fast_risk === 'Low risk' ? 'text-green-600' :
@@ -398,6 +447,10 @@ export const ReportViewer: React.FC<Props> = ({ visitId, showActions = false }) 
             </div>
           )}
         </div>
+      )}
+
+      {(analysis.fib4_score || analysis.nfs_score || analysis.apri_score || analysis.fast_score) && (
+        <CalculationDetails measurements={measurements} analysis={analysis} />
       )}
 
       {analysis.primary_risk_drivers && analysis.primary_risk_drivers.length > 0 && (
