@@ -1,18 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut, Users, FileText, CheckCircle, FileCheck } from 'lucide-react';
 import { PatientList } from './PatientList';
 import { VisitForm } from './VisitForm';
 import { ReportApproval } from './ReportApproval';
 import { ApprovedReports } from './ApprovedReports';
+import { ClinicalDisclaimer } from './ClinicalDisclaimer';
+import { PolicyAcceptanceModal } from './PolicyAcceptanceModal';
+import { checkPolicyAcceptance } from '../lib/policyUtils';
 
 type Tab = 'patients' | 'reports' | 'approved';
 
 export const Dashboard: React.FC = () => {
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState<Tab>('patients');
   const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
   const [selectedVisitId, setSelectedVisitId] = useState<string | null>(null);
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [checkingPolicies, setCheckingPolicies] = useState(true);
+
+  useEffect(() => {
+    const checkPolicies = async () => {
+      if (!user) return;
+
+      setCheckingPolicies(true);
+      const { needsAcceptance } = await checkPolicyAcceptance(user.id);
+      setShowPolicyModal(needsAcceptance);
+      setCheckingPolicies(false);
+    };
+
+    checkPolicies();
+  }, [user]);
 
   const handlePatientSelect = (patientId: string) => {
     setSelectedPatientId(patientId);
@@ -28,8 +46,27 @@ export const Dashboard: React.FC = () => {
     setSelectedVisitId(null);
   };
 
+  const handlePolicyAccepted = () => {
+    setShowPolicyModal(false);
+  };
+
+  if (checkingPolicies) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {showPolicyModal && <PolicyAcceptanceModal onAccept={handlePolicyAccepted} />}
+
+      <ClinicalDisclaimer variant="banner" />
+
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">

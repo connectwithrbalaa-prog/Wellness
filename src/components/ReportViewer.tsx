@@ -3,6 +3,7 @@ import { Activity, AlertCircle, Download, Mail, Loader } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import jsPDF from 'jspdf';
 import { CalculationDetails, ScoreInfoTooltip } from './CalculationDetails';
+import { ClinicalDisclaimer } from './ClinicalDisclaimer';
 
 interface Props {
   visitId: string;
@@ -170,6 +171,8 @@ export const ReportViewer: React.FC<Props> = ({ visitId, showActions = false }) 
 
   return (
     <div className="space-y-6">
+      <ClinicalDisclaimer variant="card" />
+
       {showActions && data && (
         <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-4">
           <div>
