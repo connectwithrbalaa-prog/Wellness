@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { SpeedInsights } from '@vercel/speed-insights/react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Login } from './components/Login';
 import { Dashboard } from './components/Dashboard';
@@ -39,7 +38,6 @@ function App() {
   return (
     <AuthProvider>
       <AppContent />
-      <SpeedInsights />
     </AuthProvider>
   );
 }

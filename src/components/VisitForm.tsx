@@ -10,6 +10,17 @@ interface Props {
 }
 
 interface FormData {
+  lsm_kpa: number | null;
+  cap_dbm: number | null;
+  ast_ul: number | null;
+  alt_ul: number | null;
+  platelets: number | null;
+  albumin_gl: number | null;
+  ggt_ul: number | null;
+  hba1c_percent: number | null;
+  bmi_value: number | null;
+  age_years: number | null;
+  has_diabetes: boolean;
   steatosis_grade: 'S0' | 'S1' | 'S2' | 'S3' | 'S4';
   fibrosis_stage: 'F0' | 'F1' | 'F2' | 'F3' | 'F4';
   bmi_category: 'Low' | 'Healthy' | 'High' | 'Obese';
@@ -31,9 +42,21 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [hasExistingData, setHasExistingData] = useState(false);
 
   const [formData, setFormData] = useState<FormData>({
+    lsm_kpa: null,
+    cap_dbm: null,
+    ast_ul: null,
+    alt_ul: null,
+    platelets: null,
+    albumin_gl: null,
+    ggt_ul: null,
+    hba1c_percent: null,
+    bmi_value: null,
+    age_years: null,
+    has_diabetes: false,
     steatosis_grade: 'S0',
     fibrosis_stage: 'F0',
     bmi_category: 'Healthy',
@@ -53,6 +76,13 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
   useEffect(() => {
     loadVisitData();
   }, [visitId]);
+
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(''), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   const loadVisitData = async () => {
     try {
@@ -75,9 +105,124 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
     }
   };
 
+  const validateFormData = (): string | null => {
+    if (formData.age_years !== null) {
+      if (formData.age_years < 1 || formData.age_years > 120) {
+        return 'Age must be between 1 and 120 years';
+      }
+    }
+
+    if (formData.bmi_value !== null) {
+      if (formData.bmi_value < 10 || formData.bmi_value > 70) {
+        return 'BMI must be between 10 and 70';
+      }
+
+      if (formData.bmi_value < 18.5 && formData.bmi_category !== 'Low') {
+        return 'BMI value suggests Low category, but category is set to ' + formData.bmi_category;
+      }
+      if (formData.bmi_value >= 18.5 && formData.bmi_value < 25 && formData.bmi_category !== 'Healthy') {
+        return 'BMI value suggests Healthy category, but category is set to ' + formData.bmi_category;
+      }
+      if (formData.bmi_value >= 25 && formData.bmi_value < 30 && formData.bmi_category !== 'High') {
+        return 'BMI value suggests High category, but category is set to ' + formData.bmi_category;
+      }
+      if (formData.bmi_value >= 30 && formData.bmi_category !== 'Obese') {
+        return 'BMI value suggests Obese category, but category is set to ' + formData.bmi_category;
+      }
+    }
+
+    if (formData.lsm_kpa !== null) {
+      if (formData.lsm_kpa < 0 || formData.lsm_kpa > 75) {
+        return 'LSM must be between 0 and 75 kPa';
+      }
+
+      if (formData.lsm_kpa < 7 && formData.fibrosis_stage !== 'F0') {
+        return 'LSM < 7 suggests F0 fibrosis, but stage is set to ' + formData.fibrosis_stage;
+      }
+      if (formData.lsm_kpa >= 7 && formData.lsm_kpa < 9.6 && !['F1', 'F2'].includes(formData.fibrosis_stage)) {
+        return 'LSM 7-9.5 suggests F1-F2 fibrosis, but stage is set to ' + formData.fibrosis_stage;
+      }
+      if (formData.lsm_kpa >= 9.6 && formData.lsm_kpa < 12.6 && formData.fibrosis_stage !== 'F2') {
+        return 'LSM 9.6-12.5 suggests F2 fibrosis, but stage is set to ' + formData.fibrosis_stage;
+      }
+      if (formData.lsm_kpa >= 12.6 && formData.lsm_kpa < 14 && formData.fibrosis_stage !== 'F3') {
+        return 'LSM 12.6-14 suggests F3 fibrosis, but stage is set to ' + formData.fibrosis_stage;
+      }
+      if (formData.lsm_kpa >= 14 && formData.fibrosis_stage !== 'F4') {
+        return 'LSM >= 14 suggests F4 cirrhosis, but stage is set to ' + formData.fibrosis_stage;
+      }
+    }
+
+    if (formData.cap_dbm !== null) {
+      if (formData.cap_dbm < 100 || formData.cap_dbm > 400) {
+        return 'CAP must be between 100 and 400 dB/m';
+      }
+
+      if (formData.cap_dbm < 238 && formData.steatosis_grade !== 'S0') {
+        return 'CAP < 238 suggests S0 steatosis, but grade is set to ' + formData.steatosis_grade;
+      }
+      if (formData.cap_dbm >= 238 && formData.cap_dbm < 260 && formData.steatosis_grade !== 'S1') {
+        return 'CAP 238-260 suggests S1 steatosis, but grade is set to ' + formData.steatosis_grade;
+      }
+      if (formData.cap_dbm >= 260 && formData.cap_dbm < 290 && formData.steatosis_grade !== 'S2') {
+        return 'CAP 260-290 suggests S2 steatosis, but grade is set to ' + formData.steatosis_grade;
+      }
+      if (formData.cap_dbm >= 290 && !['S3', 'S4'].includes(formData.steatosis_grade)) {
+        return 'CAP >= 290 suggests S3+ steatosis, but grade is set to ' + formData.steatosis_grade;
+      }
+    }
+
+    if (formData.ast_ul !== null && (formData.ast_ul < 0 || formData.ast_ul > 1000)) {
+      return 'AST must be between 0 and 1000 U/L';
+    }
+
+    if (formData.alt_ul !== null && (formData.alt_ul < 0 || formData.alt_ul > 1000)) {
+      return 'ALT must be between 0 and 1000 U/L';
+    }
+
+    if (formData.platelets !== null && (formData.platelets < 0 || formData.platelets > 1000)) {
+      return 'Platelets must be between 0 and 1000 10⁹/L';
+    }
+
+    if (formData.albumin_gl !== null && (formData.albumin_gl < 0 || formData.albumin_gl > 60)) {
+      return 'Albumin must be between 0 and 60 g/L';
+    }
+
+    if (formData.ggt_ul !== null && (formData.ggt_ul < 0 || formData.ggt_ul > 1000)) {
+      return 'GGT must be between 0 and 1000 U/L';
+    }
+
+    if (formData.hba1c_percent !== null) {
+      if (formData.hba1c_percent < 3 || formData.hba1c_percent > 15) {
+        return 'HbA1c must be between 3 and 15%';
+      }
+
+      if (formData.hba1c_percent >= 6.5 && !formData.has_diabetes) {
+        return 'HbA1c >= 6.5% indicates diabetes, but diabetes status is set to No';
+      }
+    }
+
+    if (formData.lft_status === 'Abnormal') {
+      if (formData.ast_ul !== null && formData.alt_ul !== null) {
+        if (formData.ast_ul <= 40 && formData.alt_ul <= 56) {
+          return 'LFT status is Abnormal but both AST and ALT are in normal range';
+        }
+      }
+    }
+
+    return null;
+  };
+
   const handleSave = async () => {
     setSaving(true);
     setError('');
+
+    const validationError = validateFormData();
+    if (validationError) {
+      setError(validationError);
+      setSaving(false);
+      return;
+    }
 
     try {
       if (hasExistingData) {
@@ -96,7 +241,7 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
         setHasExistingData(true);
       }
 
-      alert('Data saved successfully');
+      setSuccessMessage('Data is Saved');
     } catch (err: any) {
       setError(err.message || 'Failed to save data');
     } finally {
@@ -107,6 +252,13 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
   const handleGenerate = async () => {
     setGenerating(true);
     setError('');
+
+    const validationError = validateFormData();
+    if (validationError) {
+      setError(validationError);
+      setGenerating(false);
+      return;
+    }
 
     try {
       if (!hasExistingData) {
@@ -123,7 +275,7 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
 
       const { error: analysisError } = await supabase
         .from('rule_based_analysis')
-        .upsert({ ...analysis, visit_id: visitId });
+        .upsert({ ...analysis, visit_id: visitId }, { onConflict: 'visit_id' });
 
       if (analysisError) throw analysisError;
 
@@ -135,7 +287,7 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
           visit_id: visitId,
           genai_explanation: explanation,
           approval_status: 'pending'
-        });
+        }, { onConflict: 'visit_id' });
 
       if (reportError) throw reportError;
 
@@ -146,8 +298,8 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
 
       if (statusError) throw statusError;
 
-      alert('Analysis generated successfully and sent for approval!');
-      onBack();
+      setSuccessMessage('Analysis generated successfully and sent for approval!');
+      setTimeout(() => onBack(), 2000);
     } catch (err: any) {
       setError(err.message || 'Failed to generate analysis');
     } finally {
@@ -184,8 +336,218 @@ export const VisitForm: React.FC<Props> = ({ visitId, onBack }) => {
           </div>
         )}
 
+        {successMessage && (
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+            <div className="bg-white rounded-lg shadow-2xl border-2 border-emerald-500 p-8 min-w-[300px]">
+              <p className="text-center text-xl font-semibold text-gray-900">{successMessage}</p>
+            </div>
+          </div>
+        )}
+
         <section>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">FibroScan Results</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Patient Demographics</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Age (years)
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="120"
+                value={formData.age_years || ''}
+                onChange={(e) => setFormData({ ...formData, age_years: e.target.value ? parseInt(e.target.value) : null })}
+                placeholder="e.g., 45"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                BMI Value
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="10"
+                max="70"
+                value={formData.bmi_value || ''}
+                onChange={(e) => setFormData({ ...formData, bmi_value: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 26.5"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Normal: 18.5-24.9</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Diabetes Status
+              </label>
+              <select
+                value={formData.has_diabetes ? 'yes' : 'no'}
+                onChange={(e) => setFormData({ ...formData, has_diabetes: e.target.value === 'yes' })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="no">No Diabetes</option>
+                <option value="yes">Has Diabetes</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">FibroScan Measurements</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                LSM - Liver Stiffness (kPa)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="75"
+                value={formData.lsm_kpa || ''}
+                onChange={(e) => setFormData({ ...formData, lsm_kpa: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 8.5"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Reference: &lt;7 (F0), 7-9.5 (F1-F2), 9.6-12.5 (F3), &gt;12.5 (F4)
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                CAP - Controlled Attenuation (dB/m)
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="100"
+                max="400"
+                value={formData.cap_dbm || ''}
+                onChange={(e) => setFormData({ ...formData, cap_dbm: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 285"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Reference: &lt;238 (S0), 238-260 (S1), 260-290 (S2), &gt;290 (S3)
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Blood Test Results</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                AST (U/L)
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                max="1000"
+                value={formData.ast_ul || ''}
+                onChange={(e) => setFormData({ ...formData, ast_ul: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 32"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Normal: 10-40 U/L</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                ALT (U/L)
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                max="1000"
+                value={formData.alt_ul || ''}
+                onChange={(e) => setFormData({ ...formData, alt_ul: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 28"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Normal: 7-56 U/L</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Platelets (10⁹/L)
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                max="1000"
+                value={formData.platelets || ''}
+                onChange={(e) => setFormData({ ...formData, platelets: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 250"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Normal: 150-400 10⁹/L</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Albumin (g/L)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="60"
+                value={formData.albumin_gl || ''}
+                onChange={(e) => setFormData({ ...formData, albumin_gl: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 42"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Normal: 35-52 g/L</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                GGT (U/L)
+              </label>
+              <input
+                type="number"
+                step="1"
+                min="0"
+                max="1000"
+                value={formData.ggt_ul || ''}
+                onChange={(e) => setFormData({ ...formData, ggt_ul: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 35"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Normal: 0-51 U/L</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                HbA1c (%)
+              </label>
+              <input
+                type="number"
+                step="0.1"
+                min="3"
+                max="15"
+                value={formData.hba1c_percent || ''}
+                onChange={(e) => setFormData({ ...formData, hba1c_percent: e.target.value ? parseFloat(e.target.value) : null })}
+                placeholder="e.g., 5.6"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">Normal: &lt;5.7%, Prediabetes: 5.7-6.4%</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">FibroScan Categorical (Optional)</h3>
+          <p className="text-sm text-gray-600 mb-3">These will be auto-calculated from LSM/CAP if provided above</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

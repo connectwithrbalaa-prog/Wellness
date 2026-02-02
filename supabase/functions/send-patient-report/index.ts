@@ -27,20 +27,10 @@ Deno.serve(async (req: Request) => {
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
 
     if (!resendApiKey) {
-      return new Response(
-        JSON.stringify({
-          error: 'Email service not configured',
-          message: 'Please configure RESEND_API_KEY to enable email functionality'
-        }),
-        {
-          status: 503,
-          headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      throw new Error('RESEND_API_KEY environment variable is not set');
     }
+
+    console.log('Sending email to:', to);
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -123,7 +113,7 @@ ${reportContent.replace(/\n/g, '<br>').replace(/# /g, '<h2>').replace(/## /g, '<
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Liver Wellness Portal <noreply@yourdomain.com>',
+        from: 'Liver Wellness Portal <onboarding@resend.dev>',
         to: [to],
         subject: `Your Liver Health Report - ${visitDate}`,
         html: htmlContent,
@@ -131,12 +121,27 @@ ${reportContent.replace(/\n/g, '<br>').replace(/# /g, '<h2>').replace(/## /g, '<
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('Resend API error:', error);
+      const errorText = await response.text();
+      let errorDetails;
+      try {
+        errorDetails = JSON.parse(errorText);
+      } catch {
+        errorDetails = errorText;
+      }
+      console.error('Resend API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorDetails
+      });
       return new Response(
-        JSON.stringify({ error: 'Failed to send email', details: error }),
+        JSON.stringify({
+          error: 'Failed to send email',
+          details: errorDetails,
+          status: response.status,
+          info: 'Using onboarding@resend.dev requires verified recipient emails. Please add and verify your domain in Resend, or verify the recipient email address.'
+        }),
         {
-          status: 500,
+          status: response.status,
           headers: {
             ...corsHeaders,
             'Content-Type': 'application/json',

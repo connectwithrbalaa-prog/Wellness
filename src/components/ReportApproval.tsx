@@ -93,7 +93,7 @@ export const ReportApproval: React.FC = () => {
         details: { visit_id: selectedReport.visit_id }
       });
 
-      alert('Report approved successfully');
+      alert('Approved');
       setSelectedReport(null);
       setDoctorNotes('');
       loadPendingReports();

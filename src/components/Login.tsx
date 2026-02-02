@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Activity, Mail, Lock, UserPlus, KeyRound } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { ClinicalDisclaimer } from './ClinicalDisclaimer';
 
 type Mode = 'signin' | 'signup' | 'reset';
 
@@ -229,9 +230,12 @@ export const Login: React.FC = () => {
           </button>
         </form>
 
-        <p className="text-xs text-gray-500 text-center mt-6">
-          This system is for authorized medical staff only.
-        </p>
+        <div className="mt-6">
+          <ClinicalDisclaimer variant="inline" className="text-center" />
+          <p className="text-xs text-gray-500 text-center mt-2">
+            This system is for authorized healthcare professionals only.
+          </p>
+        </div>
       </div>
     </div>
   );

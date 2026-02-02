@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Activity, AlertCircle, Download, Mail, Loader } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import jsPDF from 'jspdf';
+import { CalculationDetails, ScoreInfoTooltip } from './CalculationDetails';
+import { ClinicalDisclaimer } from './ClinicalDisclaimer';
 
 interface Props {
   visitId: string;
@@ -169,6 +171,8 @@ export const ReportViewer: React.FC<Props> = ({ visitId, showActions = false }) 
 
   return (
     <div className="space-y-6">
+      <ClinicalDisclaimer variant="card" />
+
       {showActions && data && (
         <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg p-4">
           <div>
@@ -230,6 +234,29 @@ export const ReportViewer: React.FC<Props> = ({ visitId, showActions = false }) 
                 </p>
               </div>
             </div>
+
+            <div className="mt-4 p-4 bg-white bg-opacity-70 rounded-lg border border-emerald-200">
+              <h4 className="text-sm font-semibold text-gray-900 mb-2">How the Efficiency Score is Calculated</h4>
+              <p className="text-xs text-gray-700 mb-2">
+                The Liver Function Efficiency score starts at 100% and is reduced based on various health factors:
+              </p>
+              <ul className="text-xs text-gray-700 space-y-1">
+                <li>• Fat accumulation: -8% per severity level</li>
+                <li>• Liver scarring: -12% per severity level</li>
+                <li>• Obesity/High BMI: -5% to -10%</li>
+                <li>• High visceral fat: -5% to -10%</li>
+                <li>• Abnormal liver enzymes: -8%</li>
+                <li>• Abnormal lipid profile: -5%</li>
+                <li>• Ultrasound findings: -4% to -7%</li>
+                <li>• Poor sleep quality: -3%</li>
+                <li>• High stress: -4%</li>
+                <li>• Alcohol use: -10%</li>
+                <li>• Smoking: -5%</li>
+              </ul>
+              <p className="text-xs text-gray-600 mt-2 italic">
+                The final score reflects overall liver health, with higher percentages indicating better function.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -238,15 +265,196 @@ export const ReportViewer: React.FC<Props> = ({ visitId, showActions = false }) 
         <div className="border border-gray-200 rounded-lg p-4">
           <h4 className="font-semibold text-gray-900 mb-2">Fat Level</h4>
           <p className="text-gray-700">{analysis.fat_level}</p>
-          <p className="text-sm text-gray-600 mt-1">FibroScan: {measurements.steatosis_grade}</p>
+          <div className="text-sm text-gray-600 mt-2 space-y-1">
+            {measurements.cap_dbm && (
+              <p>CAP: {measurements.cap_dbm} dB/m - {analysis.cap_steatosis_stage}</p>
+            )}
+            {measurements.steatosis_grade && (
+              <p>Grade: {measurements.steatosis_grade}</p>
+            )}
+          </div>
         </div>
 
         <div className="border border-gray-200 rounded-lg p-4">
           <h4 className="font-semibold text-gray-900 mb-2">Scarring Level</h4>
           <p className="text-gray-700">{analysis.scarring_level}</p>
-          <p className="text-sm text-gray-600 mt-1">FibroScan: {measurements.fibrosis_stage}</p>
+          <div className="text-sm text-gray-600 mt-2 space-y-1">
+            {measurements.lsm_kpa && (
+              <p>LSM: {measurements.lsm_kpa} kPa - {analysis.lsm_metavir_stage}</p>
+            )}
+            {measurements.fibrosis_stage && (
+              <p>Grade: {measurements.fibrosis_stage}</p>
+            )}
+          </div>
         </div>
       </div>
+
+      {(analysis.fib4_score || analysis.nfs_score || analysis.apri_score || analysis.fast_score) && (
+        <div className="border border-emerald-200 bg-emerald-50 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Validated Clinical Scores</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {analysis.fib4_score !== null && (
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="flex items-center">
+                  <h5 className="text-xs font-medium text-gray-600 mb-1">FIB-4 Index</h5>
+                  <ScoreInfoTooltip
+                    content={{
+                      title: 'FIB-4 Index',
+                      formula: 'FIB-4 = (Age × AST) / (Platelets × √ALT)',
+                      calculation: `(${measurements.age_years} × ${measurements.ast_ul}) / (${measurements.platelets} × √${measurements.alt_ul}) = ${analysis.fib4_score}`,
+                      result: analysis.fib4_score,
+                      interpretation: analysis.fib4_risk,
+                      references: '<1.45 = Low risk; 1.45-3.25 = Indeterminate; >3.25 = High risk'
+                    }}
+                  />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{analysis.fib4_score}</p>
+                <p className={`text-sm font-medium mt-1 ${
+                  analysis.fib4_risk === 'Low risk' ? 'text-green-600' :
+                  analysis.fib4_risk === 'High risk' ? 'text-red-600' :
+                  'text-yellow-600'
+                }`}>
+                  {analysis.fib4_risk}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  &lt;1.45 low, &gt;3.25 high
+                </p>
+              </div>
+            )}
+
+            {analysis.nfs_score !== null && (
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="flex items-center">
+                  <h5 className="text-xs font-medium text-gray-600 mb-1">NAFLD Fibrosis Score</h5>
+                  <ScoreInfoTooltip
+                    content={{
+                      title: 'NAFLD Fibrosis Score',
+                      formula: 'NFS = -1.675 + (0.037×Age) + (0.094×BMI) + (1.13×Diabetes) + (0.99×AST/ALT) - (0.013×Platelets) - (0.66×Albumin)',
+                      calculation: `-1.675 + (0.037×${measurements.age_years}) + (0.094×${measurements.bmi_value}) + (1.13×${measurements.has_diabetes ? 1 : 0}) + (0.99×${(measurements.ast_ul / measurements.alt_ul).toFixed(2)}) - (0.013×${measurements.platelets}) - (0.66×${measurements.albumin_gl}) = ${analysis.nfs_score}`,
+                      result: analysis.nfs_score,
+                      interpretation: analysis.nfs_risk,
+                      references: '<-1.455 = Low risk; -1.455 to 0.676 = Indeterminate; >0.676 = High risk'
+                    }}
+                  />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{analysis.nfs_score}</p>
+                <p className={`text-sm font-medium mt-1 ${
+                  analysis.nfs_risk === 'Low risk' ? 'text-green-600' :
+                  analysis.nfs_risk === 'High risk' ? 'text-red-600' :
+                  'text-yellow-600'
+                }`}>
+                  {analysis.nfs_risk}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  &lt;-1.455 low, &gt;0.676 high
+                </p>
+              </div>
+            )}
+
+            {analysis.apri_score !== null && (
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="flex items-center">
+                  <h5 className="text-xs font-medium text-gray-600 mb-1">APRI Score</h5>
+                  <ScoreInfoTooltip
+                    content={{
+                      title: 'APRI Score',
+                      formula: 'APRI = [(AST / ULN) / Platelets] × 100',
+                      calculation: `[(${measurements.ast_ul} / 40) / ${measurements.platelets}] × 100 = ${analysis.apri_score}`,
+                      result: analysis.apri_score,
+                      interpretation: analysis.apri_risk,
+                      references: '<0.5 = Low risk; 0.5-1.5 = Indeterminate; >1.5 = High risk'
+                    }}
+                  />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{analysis.apri_score}</p>
+                <p className={`text-sm font-medium mt-1 ${
+                  analysis.apri_risk === 'Low risk' ? 'text-green-600' :
+                  analysis.apri_risk === 'High risk' ? 'text-red-600' :
+                  'text-yellow-600'
+                }`}>
+                  {analysis.apri_risk}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  &lt;0.5 low, &gt;1.5 high
+                </p>
+              </div>
+            )}
+
+            {analysis.fast_score !== null && (
+              <div className="bg-white rounded-lg p-4 border border-gray-200">
+                <div className="flex items-center">
+                  <h5 className="text-xs font-medium text-gray-600 mb-1">FAST Score</h5>
+                  <ScoreInfoTooltip
+                    content={{
+                      title: 'FAST Score',
+                      formula: 'FAST = e^X / (1 + e^X), where X = -1.65 + 1.07×ln(LSM) + 2.66×10⁻⁸×CAP³ - 63.3/AST',
+                      calculation: `With LSM=${measurements.lsm_kpa} kPa, CAP=${measurements.cap_dbm} dB/m, AST=${measurements.ast_ul} U/L → ${analysis.fast_score}`,
+                      result: analysis.fast_score,
+                      interpretation: analysis.fast_risk,
+                      references: '<0.35 = Rule out; 0.35-0.67 = Indeterminate; ≥0.67 = Rule in NASH with fibrosis'
+                    }}
+                  />
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{analysis.fast_score}</p>
+                <p className={`text-sm font-medium mt-1 ${
+                  analysis.fast_risk === 'Low risk' ? 'text-green-600' :
+                  analysis.fast_risk === 'High risk' ? 'text-red-600' :
+                  'text-yellow-600'
+                }`}>
+                  {analysis.fast_risk}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  &lt;0.35 low, ≥0.67 high
+                </p>
+              </div>
+            )}
+          </div>
+
+          {analysis.wellness_score !== null && (
+            <div className="mt-4 bg-white rounded-lg p-4 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h5 className="text-sm font-medium text-gray-600 mb-1">Custom Wellness Score</h5>
+                  <p className="text-3xl font-bold text-emerald-600">{analysis.wellness_score}/100</p>
+                </div>
+                <div className="text-right">
+                  <div className="w-32 h-32">
+                    <svg viewBox="0 0 36 36" className="transform -rotate-90">
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#e5e7eb"
+                        strokeWidth="3"
+                      />
+                      <path
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                        fill="none"
+                        stroke="#10b981"
+                        strokeWidth="3"
+                        strokeDasharray={`${analysis.wellness_score}, 100`}
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Based on LSM and CAP measurements (0-100 scale)
+              </p>
+            </div>
+          )}
+
+          {analysis.mortality_risk && (
+            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h5 className="text-sm font-medium text-gray-900 mb-1">Mortality Risk Assessment</h5>
+              <p className="text-sm text-blue-900">{analysis.mortality_risk}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {(analysis.fib4_score || analysis.nfs_score || analysis.apri_score || analysis.fast_score) && (
+        <CalculationDetails measurements={measurements} analysis={analysis} />
+      )}
 
       {analysis.primary_risk_drivers && analysis.primary_risk_drivers.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
